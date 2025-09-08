@@ -40,6 +40,32 @@ class UserChangeForm(forms.ModelForm):
 
 
 class UserRegisterForm(forms.Form):
-    phone_number = forms.CharField(max_length=15)
-    password = forms.CharField(
-        max_length=16, min_length=8, widget=forms.PasswordInput)
+    phone_number = forms.CharField(max_length=15, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'شماره مبایل'}))
+
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get('phone_number')
+        if not phone_number.startswith('09') or len(phone_number) != 11 or not phone_number.isdigit():
+            raise ValidationError('شماره موبایل وارد شده معتبر نمی باشد!')
+        return phone_number
+
+
+class UserLoginForm(forms.Form):
+    password = forms.CharField(required=False,
+                               widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'پسورد'}))
+    code = forms.CharField(required=False,
+                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'کد'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        code = cleaned_data.get('code')
+        print('password :', password)
+        print('code :', code, type(code), code == '')
+
+        if (password == '' and code == ''):
+            raise ValidationError('مقدار پسورد یا کد نمی‌تواند خالی باشد!')
+        elif (len(password) < 8 and len(code) < 5):
+            raise ValidationError(
+                'مقدار کد یا پسورد از مقدار مشخص شده کم میباشد')
+        return cleaned_data

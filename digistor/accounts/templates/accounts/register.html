@@ -40,12 +40,51 @@
                 <!-- auth-box -->
                 <div class="auth-box ui-box">
                     <!-- auth-form -->
-                    <form action="#" class="auth-form">
-                        <!-- form-element -->
-                        <div class="form-element-row mb-5">
-                            {{ form.phone_number }}
-                            <!-- <input type="text" class="" placeholder="شماره موبایل "> -->
-                        </div>
+                    <form action="" method="POST" class="auth-form" novalidate>
+                        {% csrf_token %}
+
+
+                        {% if status == None %}
+                            <!-- form-element -->
+                            <div class="form-element-row mb-5">
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                {% for error in form.phone_number.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+
+                        {% endif %}
+                        <!--  form-get-code-or-password -->
+                        {% if status == 'login' %}
+                            <div class="form-element-row mb-5">
+                                <input type="hidden" name="status" value="login">
+                                {{ form_login.password }}
+
+                                {% if form_login.non_field_errors %}
+                                    {% for error in form_login.non_field_errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+
+
+                            </div>
+                        {% elif status == 'not_found' %}
+                            <div class="form-element-row mb-5">
+                                <input type="hidden" name="status" value="not_found">
+                                {{ form_login.code }}
+                                
+                                {% if form_login.non_field_errors %}
+                                    {% for error in form_login.non_field_errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+
+
                         <!--  form-element -->
                         <!-- form-element -->
                         <div class="form-element-row mb-3">
