@@ -1,10 +1,30 @@
 from django.contrib import admin
-from .models import User
+from .models import User, OtpCode
 from django.core.exceptions import ValidationError
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 # from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.contrib.auth.models import Group
 from .forms import UserChangeForm, UserCreationForm
+
+
+@admin.register(OtpCode)
+class OtpCodeAdmin(admin.ModelAdmin):
+    list_display = ('phone_number', 'code', 'created')
+    search_fields = ('phone_number',)
+    ordering = ('-created',)
+    list_filter = ('created',)
+    fieldsets = (
+        (
+            'Info Code ', {
+                'fields': ('phone_number', 'code')
+            }
+        ),
+        # (
+        #     'MetaData', {
+        #         'fields': ('created',)
+        #     }
+        # )
+    )
 
 
 class UserAdmin(BaseUserAdmin):
