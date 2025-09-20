@@ -1,8 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.views import View
-from .forms import UserRegisterForm, UserLoginForm
+from .forms import UserRegisterForm, UserLoginForm, VerifyCodeForm
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
 
 User = get_user_model()
 
@@ -13,34 +19,48 @@ class UserRegisterView(View):
 
     def get(self, request):
         form = self.form()
-
-        return render(request, 'accounts/register.html', {'form': form, 'status': None})
+        return render(request, 'accounts/index.html', {'form': form})
 
     def post(self, request):
-        status = request.POST.get('status')
+        print('*' * 60)
+        form = self.form(request.POST)
 
-        if status in ['login', 'not_found']:
+        if form.is_valid():
 
-            form = self.form_loing(request.POST)
+            phone_number = form.cleaned_data.get('phone_number')
+            user = User.objects.filter(phone_number=phone_number).first()
 
-            if form.is_valid():
-                if status == 'login':
-                    password = form.cleaned_data.get('password')
+            if user:
+                request.session['user_phone_number'] = {
+                    'phone_number': phone_number,
+                    'status': 'login'
+                }
+            else:
+                request.session['user_phone_number'] = {
+                    'phone_number': phone_number,
+                    'status': 'register'
+                }
+            verfiy_view = VerifyView()
+            return verfiy_view.post(request)
+        html = render_to_string('accounts/index.html',
+                                {'form': form}, request=request)
+        return JsonResponse({'status': 500, 'html': html, 'error': form.errors})
 
-                    return HttpResponse(f'login with password: {password}')
-                else:
-                    code = form.cleaned_data.get('code')
 
-                    return HttpResponse(f'login with code: {code}')
-            return render(request, 'accounts/register.html', {'form_login': form, 'status': status})
+class VerifyView(View):
+
+    def post(self, request):
+
+        form_login = UserLoginForm()
+        form_verify_code = VerifyCodeForm()
+        print('=' * 60)
+        info_session = request.session.get('user_phone_number')
+
+        if info_session['status'] == 'login':
+            html = render_to_string(
+                'accounts/login_form.html', {'form': form_login}, request=request)
+            return JsonResponse({'sucsses': True, 'html': html})
         else:
-            form = self.form(request.POST)
-            if form.is_valid():
-                phone_number = form.cleaned_data.get('phone_number')
-                user = User.objects.filter(phone_number=phone_number).first()
-                if user:
-                    return render(request, 'accounts/register.html', {'form_login': self.form_loing(), 'status': 'login'})
-                else:
-                    return render(request, 'accounts/register.html', {'form_login': self.form_loing(), 'status': 'not_found'})
-
-        return render(request, 'accounts/register.html', {'form': form, 'status': None})
+            html = render_to_string(
+                'accounts/verify_code_form.html', {'form': form_verify_code}, request=request)
+            return JsonResponse({'sucsses': True, 'html': html})

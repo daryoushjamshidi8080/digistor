@@ -53,19 +53,27 @@ class UserRegisterForm(forms.Form):
 class UserLoginForm(forms.Form):
     password = forms.CharField(required=False,
                                widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'پسورد'}))
-    code = forms.CharField(required=False,
-                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'کد'}))
 
     def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get('password')
-        code = cleaned_data.get('code')
-        print('password :', password)
-        print('code :', code, type(code), code == '')
+        password = self.cleaned_data.get('password')
 
-        if (password == '' and code == ''):
-            raise ValidationError('مقدار پسورد یا کد نمی‌تواند خالی باشد!')
-        elif (len(password) < 8 and len(code) < 5):
-            raise ValidationError(
-                'مقدار کد یا پسورد از مقدار مشخص شده کم میباشد')
-        return cleaned_data
+        if password == '':
+            raise ValidationError('پسورد نمی‌تواند خالی باشد!')
+        elif len(password) < 8:
+            raise ValidationError('پسورد وارد شده معتبر نمی باشد!')
+        return self.cleaned_data
+
+
+class VerifyCodeForm(forms.Form):
+    code = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'کد'}))
+
+    def clean_code(self):
+
+        code = self.cleaned_data.get('code')
+
+        if code == '':
+            raise ValidationError('کد نمی‌تواند خالی باشد!')
+        elif len(code) < 5:
+            raise ValidationError('کد وارد شده معتبر نمی باشد!')
+        return code

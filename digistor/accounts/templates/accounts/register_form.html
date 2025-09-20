@@ -1,0 +1,8 @@
+<div class="form-element-row mb-5">
+    {{ form.phone_number }}
+    {% if form.phone_number.errors %}
+        {% for error in form.phone_number.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    {% endif %}
+</div>
